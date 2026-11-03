@@ -63,7 +63,12 @@ public class AttackHandler implements QuickImports {
         boolean canAttackNow = canAttack(config, 0);
 
         if (canAttackSoon) preAttackEntity(config);
-        if (RaytracingUtil.rayTrace(config) && canAttackNow && !isSprinting()) {
+        // Sprint state is updated through packets and can lag one or more
+        // ticks behind the local WASD input. Blocking the attack here made
+        // ordinary forward/strafe movement drop hits while the server still
+        // considered the player sprinting. preAttackEntity already performs
+        // the sprint reset required before the hit.
+        if (RaytracingUtil.rayTrace(config) && canAttackNow) {
             attackEntity(config);
         }
     }

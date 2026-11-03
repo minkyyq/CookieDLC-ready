@@ -69,11 +69,11 @@ public class RaytracingUtil implements QuickImports {
     }
 
     public boolean rayTrace(AttackPerpetrator.AttackPerpetratorConfigurable config) {
-        return rayTrace(RotationController.INSTANCE.getRotation().toVector(),config.getMaximumRange() - 0.25F, config.getBox());
+        return rayTrace(RotationController.INSTANCE.getRotation().toVector(), config.getMaximumRange(), config.getBox());
     }
 
     public boolean rayTrace(double range, Box box) {
-        return rayTrace(RotationController.INSTANCE.getRotation().toVector(),range - 0.25F,box);
+        return rayTrace(RotationController.INSTANCE.getRotation().toVector(), range, box);
     }
 
     public boolean rayTrace(Vec3d clientVec, double range, Box box) {

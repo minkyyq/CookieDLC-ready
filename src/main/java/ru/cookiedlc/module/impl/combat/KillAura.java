@@ -59,6 +59,14 @@ public class KillAura extends Module {
     @NonFinal
     LivingEntity target, lastTarget;
 
+    /**
+     * The exact attack calculation used for this tick. Keeping it between PRE
+     * and POST prevents movement input or a second point sample from making
+     * the rotation and the hit check disagree.
+     */
+    @NonFinal
+    AttackPerpetrator.AttackPerpetratorConfigurable attackConfig;
+
     MultiSelectSetting targetType = new MultiSelectSetting("Target Type", "Filters the entire list of targets by type")
             .value("Players", "Mobs", "Animals", "Friends");
 
@@ -80,7 +88,7 @@ public class KillAura extends Module {
             ).selected("Smooth");
 
     SelectSetting correctionType = new SelectSetting("Correction Type", "Selects the type of correction")
-            .value("Free", "Focus", "Target").selected("Focused");
+            .value("Free", "Focus", "Target").selected("Free");
 
     GroupSetting correctionGroup = new GroupSetting("Move correction", "Prevents detection by movement sensitive anti-cheats")
             .settings(correctionType).setValue(true);
@@ -120,6 +128,7 @@ public class KillAura extends Module {
     public void deactivate() {
         targetSelector.releaseTarget();
         target = null;
+        attackConfig = null;
         RotationController.INSTANCE.clear();
         super.deactivate();
     }
@@ -158,15 +167,17 @@ public class KillAura extends Module {
             case EventType.PRE -> {
                 target = updateTarget();
                 if (target != null) {
-                    rotateToTarget(getConfig());
+                    attackConfig = getConfig();
+                    rotateToTarget(attackConfig);
                     lastTarget = target;
                 } else {
+                    attackConfig = null;
                 }
             }
             case EventType.POST -> {
                 Render3DUtil.updateTargetEsp();
-                if (target != null) {
-                    Main.getInstance().getAttackPerpetrator().performAttack(getConfig());
+                if (target != null && attackConfig != null) {
+                    Main.getInstance().getAttackPerpetrator().performAttack(attackConfig);
                 }
             }
         }
@@ -380,7 +391,7 @@ public class KillAura extends Module {
     }
 
     public RotationConfig getRotationConfig() {
-        return new RotationConfig(getSmoothMode(), correctionGroup.isValue(), correctionType.isSelected("Free"), correctionType.isSelected("Targeted"), target);
+        return new RotationConfig(getSmoothMode(), correctionGroup.isValue(), correctionType.isSelected("Free"), correctionType.isSelected("Target"), target);
     }
 
     public AngleSmoothMode getSmoothMode() {
